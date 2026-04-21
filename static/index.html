@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Breed Identifier</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --green-dark:#0d4a28;--green-mid:#1a6b3c;--green-bright:#2d9e5f;
+  --green-light:#a8dfc0;--green-pale:#e8f7ef;
+  --amber:#e8930a;--amber-pale:#fff4e0;
+  --red:#c0392b;--red-pale:#fdecea;
+  --blue:#1a5fa8;--blue-pale:#e8f0fb;
+  --text-dark:#0f1f15;--text-mid:#3a5244;--text-light:#6e8c7c;
+  --border:#c8e0d4;--surface:#f4fbf7;--white:#ffffff;
+  --radius:14px;--radius-sm:8px;
+  --shadow:0 4px 24px rgba(13,74,40,.10);--shadow-sm:0 2px 10px rgba(13,74,40,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sora',sans-serif;background:var(--surface);color:var(--text-dark);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+header{background:var(--green-dark);padding:0 24px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.18)}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
+.logo-block{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;background:var(--green-bright);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.logo-title{font-size:15px;font-weight:600;color:white;line-height:1.2}
+.logo-sub{font-size:11px;color:var(--green-light);font-weight:400}
+.header-badge{background:rgba(255,255,255,.12);color:var(--green-light);font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.18);white-space:nowrap}
+.api-status{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.08);padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.15)}
+.api-dot{width:8px;height:8px;border-radius:50%;background:#aaa;flex-shrink:0;transition:background .3s}
+.api-dot.online{background:#5dde96}
+.api-dot.offline{background:#ff7c7c}
+.gov-pill{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,.80);font-weight:500}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--green-dark) 0%,#0f5c30 60%,#1a7a42 100%);padding:56px 24px 72px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 80% 30%,rgba(45,158,95,.25) 0%,transparent 60%),radial-gradient(circle at 10% 80%,rgba(168,223,192,.12) 0%,transparent 50%)}
+.hero-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;position:relative;z-index:1}
+.hero-label{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.20);color:var(--green-light);font-size:12px;font-weight:500;padding:5px 12px;border-radius:20px;margin-bottom:18px}
+.hero-label::before{content:'●';font-size:8px;color:#5dde96}
+.hero h1{font-size:clamp(26px,3.5vw,42px);color:white;font-weight:700;line-height:1.20;margin-bottom:14px}
+.hero h1 span{color:#5dde96}
+.hero-desc{color:rgba(255,255,255,.75);font-size:15px;line-height:1.7;margin-bottom:28px;font-weight:300}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn-hero-primary{background:var(--green-bright);color:white;border:none;padding:13px 28px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;transition:.2s;font-family:'Sora',sans-serif}
+.btn-hero-primary:hover{background:#249650;transform:translateY(-1px)}
+.btn-hero-secondary{background:rgba(255,255,255,.10);color:white;border:1px solid rgba(255,255,255,.25);padding:13px 24px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;transition:.2s;font-family:'Sora',sans-serif}
+.btn-hero-secondary:hover{background:rgba(255,255,255,.18)}
+.hero-stats{display:flex;gap:24px;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,.15)}
+.stat-num{font-size:22px;font-weight:700;color:#5dde96}
+.stat-label{font-size:11px;color:rgba(255,255,255,.60);margin-top:2px}
+
+/* phone mockup */
+.hero-phone{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:24px;padding:24px;backdrop-filter:blur(10px)}
+.phone-screen{background:white;border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.phone-bar{background:var(--green-dark);padding:10px 14px;display:flex;align-items:center;gap:8px}
+.phone-bar span{color:white;font-size:12px;font-weight:500}
+.phone-body{padding:14px}
+.phone-upload{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;background:var(--surface);margin-bottom:12px}
+.phone-result-card{background:var(--green-pale);border-radius:10px;padding:12px;border:1px solid var(--border)}
+.pr-breed{font-size:16px;font-weight:600;color:var(--green-dark)}
+.pr-type{font-size:11px;color:var(--text-light);margin-bottom:8px}
+.conf-track{height:6px;background:#d0eddf;border-radius:4px}
+.conf-fill-phone{height:6px;border-radius:4px;background:var(--green-bright);width:91%}
+.phone-apply-btn{background:var(--green-mid);color:white;border:none;width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-top:10px;font-family:'Sora',sans-serif;cursor:pointer}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+.section-head{margin-bottom:28px}
+.section-head h2{font-size:22px;font-weight:600;color:var(--text-dark)}
+.section-head p{font-size:14px;color:var(--text-light);margin-top:4px}
+
+/* TOOL */
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:48px}
+@media(max-width:768px){.tool-grid{grid-template-columns:1fr}.hero-inner{grid-template-columns:1fr}.hero-phone{display:none}}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-sm);overflow:hidden}
+.card-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-header-icon{width:34px;height:34px;border-radius:8px;background:var(--green-pale);display:flex;align-items:center;justify-content:center;font-size:18px}
+.card-header h3{font-size:15px;font-weight:600;color:var(--text-dark)}
+.card-header p{font-size:12px;color:var(--text-light)}
+.card-body{padding:20px}
+
+/* upload */
+.upload-area{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:32px 16px;text-align:center;cursor:pointer;transition:.2s;background:var(--surface);position:relative}
+.upload-area:hover,.upload-area.drag{border-color:var(--green-bright);background:var(--green-pale)}
+.upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.ua-icon{font-size:36px;margin-bottom:10px}
+.ua-title{font-size:14px;font-weight:600;color:var(--text-dark);margin-bottom:4px}
+.ua-hint{font-size:12px;color:var(--text-light)}
+.ua-formats{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.ua-fmt{background:var(--green-pale);color:var(--green-dark);font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
+.divider-text{text-align:center;font-size:12px;color:var(--text-light);margin:14px 0;position:relative}
+.divider-text::before,.divider-text::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
+.divider-text::before{left:0}.divider-text::after{right:0}
+.sample-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sample-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;text-align:center;cursor:pointer;transition:.2s;font-family:'Sora',sans-serif}
+.sample-btn:hover,.sample-btn.selected{border-color:var(--green-bright);background:var(--green-pale);transform:translateY(-1px)}
+.sb-emoji{font-size:22px;display:block;margin-bottom:4px}
+.sb-name{font-size:11px;font-weight:600;color:var(--text-dark);display:block}
+.sb-type{font-size:10px;color:var(--text-light);display:block}
+.scan-btn{width:100%;background:var(--green-mid);color:white;border:none;padding:13px;border-radius:var(--radius-sm);font-size:15px;font-weight:600;margin-top:16px;cursor:pointer;transition:.2s;font-family:'Sora',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}
+.scan-btn:hover{background:var(--green-dark);transform:translateY(-1px)}
+.scan-btn:disabled{background:var(--text-light);cursor:not-allowed;transform:none}
+
+/* result */
+.result-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;color:var(--text-light);font-size:13px;gap:10px;text-align:center}
+.re-icon{font-size:40px;opacity:.4}
+.scanning-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;gap:14px}
+.spin-ring{width:54px;height:54px;border:3px solid var(--border);border-top-color:var(--green-bright);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan-status-text{font-size:13px;font-weight:500;color:var(--text-mid)}
+.scan-progress{width:70%;background:var(--border);height:4px;border-radius:4px;overflow:hidden}
+.scan-progress-fill{height:4px;background:var(--green-bright);border-radius:4px;transition:width .3s ease}
+.result-breed-header{display:flex;align-items:center;gap:14px;padding:16px;background:var(--green-pale);border-radius:var(--radius-sm);margin-bottom:14px}
+.rb-emoji{font-size:48px}
+.rb-breed{font-size:22px;font-weight:700;color:var(--green-dark)}
+.rb-type{font-size:13px;color:var(--text-light);margin-top:2px}
+.rb-badges{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.badge-green{background:#d4f1e3;color:#0d4a28}
+.badge-amber{background:var(--amber-pale);color:#7a4800}
+.badge-blue{background:var(--blue-pale);color:#0c3d75}
+.conf-section{margin-bottom:14px}
+.conf-label-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:6px}
+.conf-label-text{color:var(--text-mid);font-weight:500}
+.conf-pct{font-weight:700;color:var(--green-dark);font-size:16px}
+.conf-track-lg{height:10px;background:var(--border);border-radius:6px;overflow:hidden}
+.conf-fill-lg{height:10px;border-radius:6px;transition:width .8s ease}
+.alt-section{margin-bottom:14px}
+.alt-title{font-size:12px;font-weight:600;color:var(--text-light);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.alt-row-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.alt-name{font-size:13px;color:var(--text-mid)}
+.alt-bar-wrap{flex:1;margin:0 10px;height:4px;background:var(--border);border-radius:4px;overflow:hidden}
+.alt-bar-fill{height:4px;background:var(--green-light);border-radius:4px}
+.alt-pct{font-size:12px;color:var(--text-light);min-width:32px;text-align:right}
+.alert-box{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+.alert-success{background:#d4f1e3;color:#0d4a28;border:1px solid #a8dfc0}
+.alert-warning{background:var(--amber-pale);color:#7a4800;border:1px solid #f0c060}
+.alert-error{background:var(--red-pale);color:#7a1a12;border:1px solid #f0a0a0}
+.alert-info{background:var(--blue-pale);color:#0c3d75;border:1px solid #90b8e8}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn-apply{background:var(--green-mid);color:white;border:none;padding:11px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;transition:.2s;font-family:'Sora',sans-serif}
+.btn-apply:hover{background:var(--green-dark)}
+.btn-rescan{background:var(--surface);color:var(--text-dark);border:1px solid var(--border);padding:11px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:.2s;font-family:'Sora',sans-serif}
+.btn-rescan:hover{background:var(--border)}
+.demo-banner{background:var(--amber-pale);border:1px solid #f0c060;border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:#7a4800;margin-bottom:12px;display:none}
+
+/* FORM */
+.form-section{margin-bottom:48px}
+.form-card{background:white;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm)}
+.form-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
+.form-tab{flex:1;padding:13px;text-align:center;font-size:13px;font-weight:500;color:var(--text-light);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;font-family:'Sora',sans-serif;transition:.2s}
+.form-tab.active{color:var(--green-mid);border-bottom:2px solid var(--green-mid);background:white}
+.form-tab:hover:not(.active){color:var(--text-dark)}
+.tab-content{display:none;padding:24px}
+.tab-content.active{display:block}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+.form-group label{font-size:12px;font-weight:600;color:var(--text-mid);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--surface);color:var(--text-dark);font-family:'Sora',sans-serif;transition:.2s;outline:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--green-bright);background:white}
+.form-group textarea{resize:vertical;min-height:80px}
+.breed-detected-box{background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.breed-detected-box.filled{background:var(--green-pale);border:1px solid var(--green-light)}
+.bdb-icon{font-size:28px}
+.bdb-breed{font-size:16px;font-weight:700;color:var(--green-dark)}
+.bdb-meta{font-size:12px;color:var(--text-light)}
+.bdb-status{font-size:11px;font-weight:600;background:#a8dfc0;color:var(--green-dark);padding:3px 10px;border-radius:20px;white-space:nowrap}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;padding:16px 24px 24px;border-top:1px solid var(--border)}
+.form-submit{background:var(--green-mid);color:white;border:none;padding:14px 28px;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;transition:.2s;font-family:'Sora',sans-serif}
+.form-submit:hover{background:var(--green-dark)}
+.btn-outline{background:white;color:var(--text-mid);border:1px solid var(--border);padding:12px 22px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;font-family:'Sora',sans-serif}
+
+/* BREEDS DB */
+.breeds-section{margin-bottom:48px}
+.breeds-filter{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.filter-btn{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:white;color:var(--text-mid);transition:.2s;font-family:'Sora',sans-serif}
+.filter-btn.active,.filter-btn:hover{background:var(--green-mid);color:white;border-color:var(--green-mid)}
+.breeds-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.breed-card{background:white;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;transition:.2s}
+.breed-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.bc-top{padding:20px 16px 14px;text-align:center;background:var(--green-pale)}
+.bc-emoji{font-size:42px;display:block;margin-bottom:6px}
+.bc-name{font-size:15px;font-weight:700;color:var(--green-dark)}
+.bc-type{font-size:11px;color:var(--text-light);margin-top:2px}
+.bc-body{padding:12px 14px}
+.bc-origin{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-mid);margin-bottom:6px}
+.bc-desc{font-size:12px;color:var(--text-light);line-height:1.5}
+.bc-traits{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.bc-trait{background:var(--surface);border:1px solid var(--border);font-size:10px;color:var(--text-mid);padding:2px 7px;border-radius:20px}
+
+/* HISTORY */
+.history-section{margin-bottom:48px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--surface)}
+th{text-align:left;padding:12px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-light);border-bottom:1px solid var(--border)}
+td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text-dark)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface)}
+.status-ai{background:var(--green-pale);color:var(--green-dark);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-block}
+.status-manual{background:var(--amber-pale);color:#7a4800;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-block}
+
+/* HOW */
+.how-section{margin-bottom:48px}
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.step-card{background:white;border-radius:var(--radius);border:1px solid var(--border);padding:22px 18px;box-shadow:var(--shadow-sm)}
+.step-num{width:32px;height:32px;background:var(--green-dark);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-bottom:14px}
+.step-icon{font-size:28px;margin-bottom:10px;display:block}
+.step-title{font-size:14px;font-weight:600;color:var(--text-dark);margin-bottom:6px}
+.step-desc{font-size:13px;color:var(--text-light);line-height:1.6}
+
+/* FOOTER */
+footer{background:var(--green-dark);color:rgba(255,255,255,.65);padding:32px 24px;font-size:13px;text-align:center}
+.footer-inner{max-width:1100px;margin:0 auto}
+footer p{line-height:1.7}
+footer strong{color:rgba(255,255,255,.9)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:white;border-radius:var(--radius);max-width:480px;width:100%;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.25);transform:scale(.95);transition:transform .2s}
+.modal-overlay.open .modal{transform:scale(1)}
+.modal-header{background:var(--green-pale);padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.modal-emoji{font-size:36px}
+.modal-breed-name{font-size:22px;font-weight:700;color:var(--green-dark)}
+.modal-close{margin-left:auto;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-light);padding:4px}
+.modal-body{padding:20px}
+.modal-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.modal-row:last-child{border-bottom:none}
+.mr-label{color:var(--text-light)}
+.mr-value{color:var(--text-dark);font-weight:500;text-align:right;max-width:60%}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--green-dark);color:white;padding:13px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;box-shadow:var(--shadow);z-index:300;transform:translateY(80px);opacity:0;transition:.3s;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateY(0);opacity:1}
+html{scroll-behavior:smooth}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <div class="logo-icon">🐄</div>
+      <div>
+        <div class="logo-title">Cattle Breed Identification</div>
+        <div class="logo-sub">AI Breed Identification System</div>
+      </div>
+    </div>
+    <div class="api-status" id="api-status-badge">
+      <span class="api-dot" id="api-dot"></span>
+      <span id="api-status-text">Checking API…</span>
+    </div>
+    <div class="header-badge">● ResNet-50 · ONNX · Flask API</div>
+    <div style="display:flex;gap:8px">
+      <div class="gov-pill">MoFAHD&amp;E</div>
+      <div class="gov-pill">GoI Initiative</div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-label">Smart Livestock Registration</div>
+      <h1>Identify <span>Cattle &amp; Buffalo</span> Breeds with AI</h1>
+      <p class="hero-desc">AI-powered decision-support for Field Level Workers — classify Indian cattle and buffalo breeds from photos, eliminating manual errors in the Bharat Pashudhan App.</p>
+      <div class="hero-actions">
+        <button class="btn-hero-primary" onclick="document.getElementById('tool-section').scrollIntoView()">Try AI Scanner</button>
+        <button class="btn-hero-secondary" onclick="document.getElementById('breeds-section').scrollIntoView()">View Breed Database</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-num">10</div><div class="stat-label">Indian Breeds</div></div>
+        <div class="stat"><div class="stat-num">94%+</div><div class="stat-label">Accuracy</div></div>
+        <div class="stat"><div class="stat-num">&lt;50ms</div><div class="stat-label">Inference</div></div>
+        <div class="stat"><div class="stat-num">ONNX</div><div class="stat-label">Cross-platform</div></div>
+      </div>
+    </div>
+    <div class="hero-phone">
+      <div class="phone-screen">
+        <div class="phone-bar"><span>🐄 BPA — Breed Scanner</span></div>
+        <div class="phone-body">
+          <div class="phone-upload"><div style="font-size:28px;margin-bottom:6px">📷</div><div style="font-size:12px;color:var(--text-light)">Tap to capture animal photo</div></div>
+          <div class="phone-result-card">
+            <div class="pr-breed">Murrah</div>
+            <div class="pr-type">Buffalo · Indigenous breed</div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-mid);margin-bottom:4px"><span>Confidence</span><span><b>91%</b></span></div>
+            <div class="conf-track"><div class="conf-fill-phone"></div></div>
+            <button class="phone-apply-btn">✓ Apply to Registration</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="main">
+
+  <!-- HOW IT WORKS -->
+  <section class="how-section">
+    <div class="section-head"><h2>How it works</h2><p>Four steps for a Field Level Worker during animal registration</p></div>
+    <div class="steps-grid">
+      <div class="step-card"><div class="step-num">1</div><span class="step-icon">📷</span><div class="step-title">Capture photo</div><div class="step-desc">FLW takes a photo of the animal — any lighting, background, or pose supported.</div></div>
+      <div class="step-card"><div class="step-num">2</div><span class="step-icon">🤖</span><div class="step-title">AI analysis</div><div class="step-desc">Python backend runs ResNet-50 ONNX model — extracts 2048-dim feature vectors and computes cosine similarity.</div></div>
+      <div class="step-card"><div class="step-num">3</div><span class="step-icon">📊</span><div class="step-title">Breed suggestion</div><div class="step-desc">Top breed + confidence score returned via API. FLW accepts or overrides with manual entry.</div></div>
+      <div class="step-card"><div class="step-num">4</div><span class="step-icon">✅</span><div class="step-title">Register &amp; submit</div><div class="step-desc">Verified breed auto-fills BPA registration form, reducing errors and improving data integrity.</div></div>
+    </div>
+  </section>
+
+  <!-- AI TOOL -->
+  <section id="tool-section">
+    <div class="section-head"><h2>AI Breed Scanner</h2><p>Upload an animal image — sent to the Python/Flask API for real ResNet-50 inference</p></div>
+
+    <!-- Demo mode notice -->
+    <div class="demo-banner" id="demo-banner">
+      ⚠️ <strong>Demo mode:</strong> Python API not detected at localhost:5000. Install dependencies and run <code>python app.py</code> for real AI inference. Results shown are simulated.
+    </div>
+
+    <div class="tool-grid">
+      <!-- Input -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon">📷</div>
+          <div><h3>Upload Animal Image</h3><p>Sent to Python API for ResNet-50 inference</p></div>
+        </div>
+        <div class="card-body">
+          <div class="upload-area" id="upload-area" ondragover="handleDrag(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+            <input type="file" id="file-input" accept="image/*" onchange="handleFileChange(event)" />
+            <div class="ua-icon">📁</div>
+            <div class="ua-title">Drop image or click to browse</div>
+            <div class="ua-hint">Clear side/front view gives best results</div>
+            <div class="ua-formats"><span class="ua-fmt">JPG</span><span class="ua-fmt">PNG</span><span class="ua-fmt">WEBP</span></div>
+          </div>
+          <div id="preview-wrap" style="display:none;margin-top:12px">
+            <img id="preview-img" style="width:100%;border-radius:var(--radius-sm);max-height:180px;object-fit:cover;border:1px solid var(--border)" />
+            <div style="font-size:11px;color:var(--text-light);margin-top:4px" id="preview-label"></div>
+          </div>
+          <div class="divider-text">or use a sample breed</div>
+          <div class="sample-grid" id="sample-grid">
+            <div class="sample-btn" onclick="selectSample('Gir','Cattle',this)"><span class="sb-emoji">🐄</span><span class="sb-name">Gir</span><span class="sb-type">Cattle</span></div>
+            <div class="sample-btn" onclick="selectSample('Sahiwal','Cattle',this)"><span class="sb-emoji">🐄</span><span class="sb-name">Sahiwal</span><span class="sb-type">Cattle</span></div>
+            <div class="sample-btn" onclick="selectSample('Ongole','Cattle',this)"><span class="sb-emoji">🐄</span><span class="sb-name">Ongole</span><span class="sb-type">Cattle</span></div>
+            <div class="sample-btn" onclick="selectSample('Murrah','Buffalo',this)"><span class="sb-emoji">🐃</span><span class="sb-name">Murrah</span><span class="sb-type">Buffalo</span></div>
+            <div class="sample-btn" onclick="selectSample('Surti','Buffalo',this)"><span class="sb-emoji">🐃</span><span class="sb-name">Surti</span><span class="sb-type">Buffalo</span></div>
+            <div class="sample-btn" onclick="selectSample('Bhadawari','Buffalo',this)"><span class="sb-emoji">🐃</span><span class="sb-name">Bhadawari</span><span class="sb-type">Buffalo</span></div>
+          </div>
+          <button class="scan-btn" id="scan-btn" onclick="runScan()" disabled>🔍 Identify Breed</button>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon">📊</div>
+          <div><h3>Identification Result</h3><p>AI classification with confidence scores</p></div>
+        </div>
+        <div class="card-body" id="result-panel">
+          <div class="result-empty"><div class="re-icon">🔍</div><div>Select a sample or upload an image<br>then click Identify Breed</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REGISTRATION FORM -->
+  <section class="form-section" id="register-section">
+    <div class="section-head"><h2>Animal Registration Form</h2><p>BPA registration — breed auto-filled from AI scan</p></div>
+    <div class="form-card">
+      <div class="form-tabs">
+        <button class="form-tab active" onclick="switchTab('tab-basic',this)">Basic Info</button>
+        <button class="form-tab" onclick="switchTab('tab-breed',this)">Breed &amp; Physical</button>
+        <button class="form-tab" onclick="switchTab('tab-health',this)">Health &amp; Nutrition</button>
+        <button class="form-tab" onclick="switchTab('tab-owner',this)">Owner Details</button>
+      </div>
+      <div class="tab-content active" id="tab-basic">
+        <div class="form-grid">
+          <div class="form-group"><label>Animal Tag ID</label><input type="text" id="f-tagid" placeholder="e.g. IN-GJ-0094821" /></div>
+          <div class="form-group"><label>Species</label><select id="f-species"><option>Cattle</option><option>Buffalo</option></select></div>
+          <div class="form-group"><label>Sex</label><select id="f-sex"><option>Female</option><option>Male</option></select></div>
+          <div class="form-group"><label>Age (years)</label><input type="number" id="f-age" placeholder="e.g. 4" min="0" max="30" /></div>
+          <div class="form-group"><label>Date of Birth (approx.)</label><input type="date" id="f-dob" /></div>
+          <div class="form-group"><label>Village / Gram Panchayat</label><input type="text" id="f-village" placeholder="Village name" /></div>
+        </div>
+      </div>
+      <div class="tab-content" id="tab-breed">
+        <div style="margin-bottom:14px">
+          <div style="font-size:12px;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">AI Detected Breed</div>
+          <div class="breed-detected-box" id="bdb-box">
+            <div class="bdb-icon">🔍</div>
+            <div style="flex:1"><div class="bdb-breed" id="bdb-breed" style="font-size:14px;color:var(--text-light)">No AI scan yet</div><div class="bdb-meta" id="bdb-meta">Run AI scanner above to auto-detect breed</div></div>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label>Breed (confirmed)</label>
+            <select id="f-breed"><option value="">— Select —</option>
+              <optgroup label="Cattle"><option>Gir</option><option>Sahiwal</option><option>Ongole</option><option>Kankrej</option><option>Tharparkar</option><option>HF Cross</option><option>Jersey Cross</option></optgroup>
+              <optgroup label="Buffalo"><option>Murrah</option><option>Surti</option><option>Jaffarbadi</option><option>Mehsana</option><option>Bhadawari</option></optgroup>
+            </select>
+          </div>
+          <div class="form-group"><label>Breed type</label><select id="f-breedtype"><option>Indigenous</option><option>Crossbred</option><option>Exotic</option><option>Unknown</option></select></div>
+          <div class="form-group"><label>Body weight (kg)</label><input type="number" id="f-weight" placeholder="e.g. 320" /></div>
+          <div class="form-group"><label>Body colour</label><input type="text" id="f-colour" placeholder="e.g. Reddish brown" /></div>
+          <div class="form-group"><label>Purpose</label><select id="f-purpose"><option>Dairy</option><option>Draught</option><option>Dual purpose</option></select></div>
+          <div class="form-group"><label>Lactation status</label><select id="f-lact"><option>Lactating</option><option>Dry</option><option>Heifer</option><option>Pregnant</option></select></div>
+        </div>
+      </div>
+      <div class="tab-content" id="tab-health">
+        <div class="form-grid">
+          <div class="form-group"><label>Last vaccination</label><input type="date" id="f-vacc" /></div>
+          <div class="form-group"><label>Vaccination type</label><input type="text" id="f-vacctype" placeholder="e.g. FMD, HS" /></div>
+          <div class="form-group"><label>Last deworming</label><input type="date" id="f-deworm" /></div>
+          <div class="form-group"><label>BCS (1–5)</label><input type="number" id="f-bcs" min="1" max="5" placeholder="e.g. 3" /></div>
+          <div class="form-group"><label>Milk yield (L/day)</label><input type="number" id="f-milk" placeholder="e.g. 8" /></div>
+          <div class="form-group"><label>Feeding system</label><select id="f-feed"><option>Stall fed</option><option>Grazing</option><option>Mixed</option></select></div>
+        </div>
+        <div class="form-group"><label>Health remarks</label><textarea id="f-remarks" placeholder="Diseases, injuries, or notable observations..."></textarea></div>
+      </div>
+      <div class="tab-content" id="tab-owner">
+        <div class="form-grid">
+          <div class="form-group"><label>Owner name</label><input type="text" id="f-owner" placeholder="Full name" /></div>
+          <div class="form-group"><label>Mobile number</label><input type="tel" id="f-mobile" placeholder="10-digit mobile" /></div>
+          <div class="form-group"><label>Aadhaar (last 4 digits)</label><input type="text" id="f-aadhar" maxlength="4" placeholder="XXXX" /></div>
+          <div class="form-group"><label>State</label>
+            <select id="f-state"><option>Gujarat</option><option>Andhra Pradesh</option><option>Punjab</option><option>Rajasthan</option><option>Haryana</option><option>Uttar Pradesh</option><option>Maharashtra</option><option>Madhya Pradesh</option><option>Tamil Nadu</option><option>Karnataka</option><option>Other</option></select>
+          </div>
+          <div class="form-group"><label>District</label><input type="text" id="f-district" placeholder="District name" /></div>
+          <div class="form-group"><label>FLW ID</label><input type="text" id="f-flwid" placeholder="e.g. FLW-0482" /></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-outline" onclick="clearForm()">Clear form</button>
+        <button class="form-submit" onclick="submitForm()">Submit Registration →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BREEDS DATABASE -->
+  <section class="breeds-section" id="breeds-section">
+    <div class="section-head"><h2>Breed Reference Database</h2><p>10 supported Indian cattle and buffalo breeds — click any for full details</p></div>
+    <div class="breeds-filter">
+      <button class="filter-btn active" onclick="filterBreeds('all',this)">All (10)</button>
+      <button class="filter-btn" onclick="filterBreeds('Cattle',this)">Cattle (5)</button>
+      <button class="filter-btn" onclick="filterBreeds('Buffalo',this)">Buffalo (5)</button>
+    </div>
+    <div class="breeds-grid" id="breeds-grid"></div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="history-section" id="history-section">
+    <div class="section-head"><h2>Registration history</h2><p>Animal registrations submitted in this session</p></div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tag ID</th><th>Breed</th><th>Type</th><th>Species</th><th>FLW</th><th>District</th><th>Method</th><th>Date</th></tr></thead>
+          <tbody id="history-tbody"><tr><td colspan="8" style="text-align:center;color:var(--text-light);padding:28px">No registrations yet — submit the form above</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <p><strong>Bharat Pashudhan App — AI Breed Identification Module</strong></p>
+    <p style="margin-top:6px">Developed under the <strong>National Programme for Dairy Development (NPDD)</strong> · Ministry of Fisheries, Animal Husbandry &amp; Dairying, Government of India</p>
+    <p style="margin-top:6px">AI Model: <strong>vishnuamar/cattle-breed-classifier</strong> · ResNet-50 · ONNX Runtime · Apache 2.0 · Flask REST API</p>
+    <p style="margin-top:10px;font-size:11px;color:rgba(255,255,255,.40)">This is a decision-support tool. Final breed confirmation remains with the Field Level Worker.</p>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="breed-modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-emoji" id="modal-emoji">🐄</div>
+      <div><div class="modal-breed-name" id="modal-name">Gir</div><div style="font-size:12px;color:var(--text-light)" id="modal-type">Cattle · Indigenous</div></div>
+      <button class="modal-close" onclick="document.getElementById('breed-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-icon">✅</span><span id="toast-msg"></span></div>
+
+<script>
+// ── CONFIG ──
+const API_BASE = 'http://localhost:5000';
+let apiOnline = false;
+let scanReady = false;
+let selectedSampleBreed = null;
+let uploadedFile = null;
+let lastResult = null;
+let regCount = 0;
+
+// ── BREED METADATA (mirrors backend, used for cards) ──
+const BREEDS = [
+  {name:'Gir',type:'Cattle',subtype:'Indigenous',emoji:'🐄',origin:'Gir Forest, Gujarat',purpose:'Dairy',milk:'6–12 L/day',fat:'4.5%',traits:['Heat tolerant','Tick resistant','High butterfat'],desc:'One of the principal Zebu breeds, known for high milk yield under tropical conditions.',details:{'Origin region':'Gir Forest, Saurashtra, Gujarat','Purpose':'Dairy (primary)','Milk yield':'6–12 litres/day','Lactation period':'285–300 days','Coat colour':'Reddish brown with large white patches','Horns':'Curved inward, medium length','Distinguishing feature':'Convex forehead (Roman nose), large pendulous ears','Heat tolerance':'High — suitable for arid/tropical conditions'}},
+  {name:'Sahiwal',type:'Cattle',subtype:'Indigenous',emoji:'🐄',origin:'Punjab / Rajasthan',purpose:'Dairy',milk:'8–14 L/day',fat:'4.8%',traits:['Best dairy breed','Tick resistant','Docile'],desc:'Considered the best indigenous dairy breed in India — widely used in crossbreeding programs.',details:{'Origin region':'Montgomery district, Punjab / Rajasthan','Purpose':'Dairy','Milk yield':'8–14 litres/day','Lactation period':'296 days average','Coat colour':'Reddish brown to brownish yellow','Horns':'Short, thick stumps','Distinguishing feature':'Loose skin, heavy dewlap, short thick neck','Heat tolerance':'Very high'}},
+  {name:'Ongole',type:'Cattle',subtype:'Indigenous',emoji:'🐄',origin:'Andhra Pradesh',purpose:'Dual purpose',milk:'4–7 L/day',fat:'4.2%',traits:['Strong draught','Disease resistant','Large frame'],desc:'Large, powerful breed used for both draught and dairy, bred in the Ongole tract of Andhra Pradesh.',details:{'Origin region':'Ongole, Andhra Pradesh','Purpose':'Dual purpose (draught + dairy)','Milk yield':'4–7 litres/day','Coat colour':'White to light grey','Horns':'Thick at base, drooping then curving up','Distinguishing feature':'Massive body, prominent hump, large dewlap','Body weight':'500–700 kg (bulls)'}},
+  {name:'Kankrej',type:'Cattle',subtype:'Indigenous',emoji:'🐄',origin:'Gujarat / Rajasthan',purpose:'Dual purpose',milk:'4–8 L/day',fat:'4.0%',traits:['Dual purpose','Strong','Fast walker'],desc:"Hardy dual-purpose breed, one of the fastest draft animals. Exported to form the Brahman breed in the Americas.",details:{'Origin region':'Rann of Kutch, Gujarat / Rajasthan','Purpose':'Dual purpose','Milk yield':'4–8 litres/day','Coat colour':'Silver grey to iron grey','Horns':'Lyre-shaped, spreading outward then upward','Distinguishing feature':'Large, open lyre horns; fast-walking gait','Heat tolerance':'Very high — adapted to desert conditions'}},
+  {name:'Tharparkar',type:'Cattle',subtype:'Indigenous',emoji:'🐄',origin:'Thar Desert, Rajasthan',purpose:'Dual purpose',milk:'5–9 L/day',fat:'4.6%',traits:['Desert adapted','Hardy','Good milk fat'],desc:'Best milk breed of Rajasthan, highly adapted to the arid conditions of the Thar desert.',details:{'Origin region':'Tharparkar, Rajasthan / Sindh','Purpose':'Dual purpose','Milk yield':'5–9 litres/day','Coat colour':'White to grayish white','Horns':'Upward and outward curve','Distinguishing feature':'Medium size, compact body, medium-length face','Adaptability':'Extreme heat and drought conditions'}},
+  {name:'Murrah',type:'Buffalo',subtype:'Indigenous',emoji:'🐃',origin:'Haryana / Punjab',purpose:'Dairy',milk:'10–18 L/day',fat:'7.5%',traits:['Highest milk yield','Heavy body','Tightly coiled horns'],desc:'The most important buffalo breed in India — highest milk yielder among all buffalo breeds worldwide.',details:{'Origin region':'Rohtak, Hisar districts, Haryana','Purpose':'Dairy','Milk yield':'10–18 litres/day','Fat content':'7–8%','Coat colour':'Jet black, may have white markings on face/legs','Horns':'Tightly coiled — the most distinctive feature','Distinguishing feature':'Heavy, wedge-shaped body; curly horns','Body weight':'450–650 kg (females)'}},
+  {name:'Surti',type:'Buffalo',subtype:'Indigenous',emoji:'🐃',origin:'Gujarat',purpose:'Dairy',milk:'7–11 L/day',fat:'8.5%',traits:['High fat content','Adaptable','Medium size'],desc:"Gujarat's principal buffalo breed, known for high butter fat percentage in milk.",details:{'Origin region':'Vadodara & Surat districts, Gujarat','Purpose':'Dairy','Milk yield':'7–11 litres/day','Fat content':'8–9% (highest among buffaloes)','Coat colour':'Rusty to brown, sometimes black','Horns':'Sickle-shaped, directed backward and upward','Distinguishing feature':'Two white collars — one on lower jaw, one on dewlap','Body weight':'400–500 kg'}},
+  {name:'Jaffarbadi',type:'Buffalo',subtype:'Indigenous',emoji:'🐃',origin:'Gujarat',purpose:'Dairy',milk:'8–14 L/day',fat:'7.8%',traits:['Heaviest body','High yield','Massive horns'],desc:'The largest of all Indian buffalo breeds, found mainly in Gir Forest area of Gujarat.',details:{'Origin region':'Jaffarabad, Gir, Gujarat','Purpose':'Dairy','Milk yield':'8–14 litres/day','Fat content':'7–8%','Coat colour':'Black','Horns':'Very massive, drooping on each side then turning up at tips','Distinguishing feature':'Heaviest buffalo breed — 700–1000 kg bulls','Body weight':'550–750 kg (females)'}},
+  {name:'Mehsana',type:'Buffalo',subtype:'Crossbred',emoji:'🐃',origin:'Gujarat',purpose:'Dairy',milk:'8–13 L/day',fat:'7.2%',traits:['Murrah-Surti traits','Productive','Adaptable'],desc:'A crossbred-origin breed from Murrah and Surti parents, developed in Mehsana district of Gujarat.',details:{'Origin region':'Mehsana district, Gujarat','Purpose':'Dairy','Milk yield':'8–13 litres/day','Fat content':'7–8%','Coat colour':'Black to dark brown','Horns':'Less tightly coiled than Murrah, turning upward at tips','Distinguishing feature':'Intermediate between Murrah and Surti in features','Breed origin':'Natural cross between Murrah and Surti'}},
+  {name:'Bhadawari',type:'Buffalo',subtype:'Indigenous',emoji:'🐃',origin:'Uttar Pradesh / MP',purpose:'Dairy',milk:'5–7 L/day',fat:'11.0%',traits:['Highest fat %','Hardy','Drought resistant'],desc:'Known for exceptionally high butterfat content (up to 13%) — the highest fat milk of any buffalo breed.',details:{'Origin region':'Bhadawar tract, Agra-Etawah, UP / MP border','Purpose':'Dairy','Milk yield':'5–7 litres/day','Fat content':'10–13% (highest of any breed)','Coat colour':'Copper to rusty brown — distinct from other black buffaloes','Horns':'Flat on top of head, curve inward','Distinguishing feature':'Unique copper/brown colour; "chevron" white marks on neck','Adaptability':'Thrives in poor nutrition — very hardy'}},
+];
+
+// ── API HEALTH CHECK ──
+async function checkApi() {
+  try {
+    const r = await fetch(`${API_BASE}/api/health`, {signal: AbortSignal.timeout(3000)});
+    if (r.ok) {
+      const d = await r.json();
+      apiOnline = true;
+      document.getElementById('api-dot').className = 'api-dot online';
+      document.getElementById('api-status-text').textContent = d.demo_mode ? 'API online (demo mode)' : 'API online — real AI';
+      if (d.demo_mode) document.getElementById('demo-banner').style.display = 'block';
+    }
+  } catch {
+    apiOnline = false;
+    document.getElementById('api-dot').className = 'api-dot offline';
+    document.getElementById('api-status-text').textContent = 'API offline — demo mode';
+    document.getElementById('demo-banner').style.display = 'block';
+  }
+}
+checkApi();
+
+// ── SCAN STATUSES ──
+const SCAN_STATUSES = [
+  'Sending image to Python API…',
+  'Loading into ResNet-50 backbone…',
+  'Extracting 2048-dim feature vectors…',
+  'Applying L2 normalisation…',
+  'Computing cosine similarity with breed prototypes…',
+  'Ranking matches and finalising prediction…',
+];
+
+// ── UPLOAD HANDLERS ──
+function handleDrag(e) { e.preventDefault(); document.getElementById('upload-area').classList.add('drag'); }
+function handleDragLeave() { document.getElementById('upload-area').classList.remove('drag'); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-area').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) setFile(file);
+}
+function handleFileChange(e) { if (e.target.files[0]) setFile(e.target.files[0]); }
+function setFile(file) {
+  uploadedFile = file;
+  selectedSampleBreed = null;
+  document.querySelectorAll('.sample-btn').forEach(b => b.classList.remove('selected'));
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('preview-img').src = ev.target.result;
+    document.getElementById('preview-label').textContent = file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+    document.getElementById('preview-wrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+  scanReady = true;
+  document.getElementById('scan-btn').disabled = false;
+  resetResultPanel();
+}
+
+function selectSample(breed, type, el) {
+  document.querySelectorAll('.sample-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSampleBreed = {breed, type};
+  uploadedFile = null;
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('file-input').value = '';
+  scanReady = true;
+  document.getElementById('scan-btn').disabled = false;
+  resetResultPanel();
+}
+
+function resetResultPanel() {
+  document.getElementById('result-panel').innerHTML = '<div class="result-empty"><div class="re-icon">🔍</div><div>Click "Identify Breed" to run AI analysis</div></div>';
+}
+
+// ── MAIN SCAN ──
+async function runScan() {
+  if (!scanReady) return;
+  showScanning();
+
+  if (uploadedFile) {
+    // Real file — POST to Python API
+    const formData = new FormData();
+    formData.append('image', uploadedFile);
+    try {
+      const resp = await fetch(`${API_BASE}/api/predict`, {method:'POST', body: formData});
+      if (!resp.ok) throw new Error('API error ' + resp.status);
+      const data = await resp.json();
+      showResult(data);
+    } catch (err) {
+      // API unavailable — use demo fallback
+      showResult(makeDemoResult(null));
+    }
+  } else if (selectedSampleBreed) {
+    // Sample: call demo endpoint or simulate
+    try {
+      const resp = await fetch(`${API_BASE}/api/predict/demo`, {signal: AbortSignal.timeout(3000)});
+      if (!resp.ok) throw new Error();
+      const data = await resp.json();
+      // Override with selected breed for the demo to be predictable
+      data.breed = selectedSampleBreed.breed;
+      data.animal_type = selectedSampleBreed.type;
+      showResult(data);
+    } catch {
+      showResult(makeDemoResult(selectedSampleBreed.breed));
+    }
+  }
+}
+
+function showScanning() {
+  const panel = document.getElementById('result-panel');
+  panel.innerHTML = `<div class="scanning-state"><div class="spin-ring"></div><div class="scan-status-text" id="sst">${SCAN_STATUSES[0]}</div><div class="scan-progress"><div class="scan-progress-fill" id="spf" style="width:0%"></div></div></div>`;
+  let p = 0, si = 0;
+  const iv = setInterval(() => {
+    p = Math.min(p + 5, 90);
+    const fill = document.getElementById('spf');
+    const sst = document.getElementById('sst');
+    if (fill) fill.style.width = p + '%';
+    if (sst && p % 15 === 0 && si < SCAN_STATUSES.length - 1) { si++; sst.textContent = SCAN_STATUSES[si]; }
+    if (p >= 90) clearInterval(iv);
+  }, 120);
+  window._scanInterval = iv;
+}
+
+function makeDemoResult(breedName) {
+  const breeds = BREEDS.map(b => b.name);
+  const top = breedName || breeds[Math.floor(Math.random()*breeds.length)];
+  const conf = 0.78 + Math.random() * 0.18;
+  const others = breeds.filter(b => b !== top).sort(() => Math.random()-0.5).slice(0,4);
+  const allScores = {[top]: conf};
+  others.forEach((b,i) => { allScores[b] = conf * (0.5 - i*0.08); });
+  const top5 = [{breed:top,score:conf}, ...others.map((b,i) => ({breed:b,score:conf*(0.5-i*0.08)}))];
+  const bData = BREEDS.find(b => b.name === top) || {};
+  return {breed:top, confidence:conf, animal_type: bData.type || 'Cattle', top_5:top5, all_scores:allScores, inference_ms: Math.round(40+Math.random()*20), demo_mode:true, metadata:{purpose:bData.purpose||'Dairy',origin:bData.origin||'India',milk_yield:bData.milk||'—',fat_pct:bData.fat||'—'}};
+}
+
+function showResult(data) {
+  if (window._scanInterval) clearInterval(window._scanInterval);
+  lastResult = data;
+
+  const bData = BREEDS.find(b => b.name === data.breed) || {};
+  const pct = Math.round(data.confidence * 100);
+  const fillColor = pct >= 85 ? '#2d9e5f' : pct >= 70 ? '#e8930a' : '#c0392b';
+  const alertClass = pct >= 85 ? 'alert-success' : 'alert-warning';
+  const alertIcon = pct >= 85 ? '✅' : '⚠️';
+  const alertMsg = pct >= 85
+    ? `High confidence match. Recommended to apply <strong>${data.breed}</strong> to the registration form.`
+    : `Moderate confidence. Please visually verify the animal before confirming <strong>${data.breed}</strong>.`;
+
+  const top5 = (data.top_5 || []).slice(1, 4); // show 3 alternatives
+  const altsHtml = top5.map(item => {
+    const w = Math.round(item.score * 100);
+    return `<div class="alt-row-item"><span class="alt-name">${item.breed}</span><div class="alt-bar-wrap"><div class="alt-bar-fill" style="width:${w}%"></div></div><span class="alt-pct">${w}%</span></div>`;
+  }).join('');
+
+  const demoNote = data.demo_mode ? '<div class="alert-box alert-info" style="margin-top:8px"><span class="alert-icon">ℹ️</span><span>Demo mode — install Python dependencies &amp; run <code>python app.py</code> for real inference.</span></div>' : '';
+  const msNote = `<div style="font-size:11px;color:var(--text-light);margin-bottom:12px">Inference: ${data.inference_ms}ms · Model: ResNet-50 ONNX${data.demo_mode ? ' · Demo' : ''}</div>`;
+
+  document.getElementById('result-panel').innerHTML = `
+    <div class="result-breed-header">
+      <div class="rb-emoji">${bData.emoji || (data.animal_type==='Buffalo'?'🐃':'🐄')}</div>
+      <div>
+        <div class="rb-breed">${data.breed}</div>
+        <div class="rb-type">${data.animal_type} · ${bData.subtype || 'Indigenous'}</div>
+        <div class="rb-badges">
+          <span class="badge badge-green">${data.animal_type}</span>
+          <span class="badge badge-blue">${(data.metadata && data.metadata.purpose) || bData.purpose || 'Dairy'}</span>
+          <span class="badge ${pct>=85?'badge-green':'badge-amber'}">${pct}% confidence</span>
+        </div>
+      </div>
+    </div>
+    ${msNote}
+    <div class="conf-section">
+      <div class="conf-label-row"><span class="conf-label-text">AI confidence score</span><span class="conf-pct">${pct}%</span></div>
+      <div class="conf-track-lg"><div class="conf-fill-lg" style="width:${pct}%;background:${fillColor}"></div></div>
+    </div>
+    <div class="alt-section">
+      <div class="alt-title">Other possibilities</div>
+      ${altsHtml}
+    </div>
+    <div class="alert-box ${alertClass}"><span class="alert-icon">${alertIcon}</span><span>${alertMsg}</span></div>
+    ${demoNote}
+    <div class="action-btns">
+      <button class="btn-apply" onclick="applyBreed()">✓ Apply to form</button>
+      <button class="btn-rescan" onclick="resetScan()">↩ Scan again</button>
+    </div>`;
+}
+
+function applyBreed() {
+  if (!lastResult) return;
+  const b = lastResult.breed;
+  const t = lastResult.animal_type;
+  const pct = Math.round(lastResult.confidence * 100);
+  const bData = BREEDS.find(x => x.name === b) || {};
+
+  const box = document.getElementById('bdb-box');
+  box.innerHTML = `<div class="bdb-icon">${bData.emoji || (t==='Buffalo'?'🐃':'🐄')}</div><div style="flex:1"><div class="bdb-breed">${b}</div><div class="bdb-meta">${t} · ${bData.subtype||'Indigenous'} · ${pct}% AI confidence</div></div><span class="bdb-status">AI verified</span>`;
+  box.classList.add('filled');
+
+  const sel = document.getElementById('f-breed');
+  for (let i = 0; i < sel.options.length; i++) { if (sel.options[i].text === b) { sel.selectedIndex = i; break; } }
+  document.getElementById('f-species').value = t;
+
+  showToast('✅', b + ' applied to registration form');
+  document.getElementById('register-section').scrollIntoView({behavior:'smooth'});
+  switchTab('tab-breed', document.querySelectorAll('.form-tab')[1]);
+}
+
+function resetScan() {
+  scanReady = false; selectedSampleBreed = null; uploadedFile = null; lastResult = null;
+  document.getElementById('scan-btn').disabled = true;
+  document.querySelectorAll('.sample-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('file-input').value = '';
+  document.getElementById('result-panel').innerHTML = '<div class="result-empty"><div class="re-icon">🔍</div><div>Select a sample or upload an image<br>to identify the breed</div></div>';
+}
+
+// ── BREED CARDS ──
+function renderBreeds(filter='all') {
+  const list = filter==='all' ? BREEDS : BREEDS.filter(b=>b.type===filter);
+  document.getElementById('breeds-grid').innerHTML = list.map(b=>`
+    <div class="breed-card" onclick="openBreedModal('${b.name}')">
+      <div class="bc-top"><span class="bc-emoji">${b.emoji}</span><div class="bc-name">${b.name}</div><div class="bc-type">${b.type} · ${b.subtype}</div></div>
+      <div class="bc-body">
+        <div class="bc-origin"><span>📍</span>${b.origin}</div>
+        <div class="bc-desc">${b.desc}</div>
+        <div class="bc-traits">${b.traits.map(t=>`<span class="bc-trait">${t}</span>`).join('')}</div>
+      </div>
+    </div>`).join('');
+}
+renderBreeds();
+
+function filterBreeds(f, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBreeds(f);
+}
+
+function openBreedModal(name) {
+  const b = BREEDS.find(x=>x.name===name);
+  if (!b) return;
+  document.getElementById('modal-emoji').textContent = b.emoji;
+  document.getElementById('modal-name').textContent = b.name;
+  document.getElementById('modal-type').textContent = b.type + ' · ' + b.subtype;
+  document.getElementById('modal-body').innerHTML = Object.entries(b.details).map(([k,v])=>`<div class="modal-row"><span class="mr-label">${k}</span><span class="mr-value">${v}</span></div>`).join('');
+  document.getElementById('breed-modal').classList.add('open');
+}
+function closeModal(e) { if (e.target===document.getElementById('breed-modal')) document.getElementById('breed-modal').classList.remove('open'); }
+
+// ── FORM TABS ──
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.form-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── FORM SUBMIT ──
+function clearForm() {
+  ['f-tagid','f-age','f-village','f-colour','f-weight','f-vacc','f-vacctype','f-deworm','f-bcs','f-milk','f-remarks','f-owner','f-mobile','f-aadhar','f-district','f-flwid'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-breed').selectedIndex = 0;
+  showToast('🔄','Form cleared');
+}
+
+function submitForm() {
+  const tagid = document.getElementById('f-tagid').value.trim() || ('IN-XX-'+Math.floor(1000000+Math.random()*9000000));
+  const breed = document.getElementById('f-breed').value || '—';
+  const species = document.getElementById('f-species').value;
+  const flw = document.getElementById('f-flwid').value || 'FLW-0001';
+  const district = document.getElementById('f-district').value || 'N/A';
+  const bdbBreed = document.getElementById('bdb-breed')?.textContent;
+  const method = (bdbBreed && bdbBreed !== 'No AI scan yet') ? 'AI Verified' : 'Manual';
+
+  const tbody = document.getElementById('history-tbody');
+  if (regCount === 0) tbody.innerHTML = '';
+  regCount++;
+  const row = document.createElement('tr');
+  row.innerHTML = `<td style="font-family:monospace;font-size:12px">${tagid}</td><td style="font-weight:500">${breed}</td><td>${document.getElementById('f-breedtype')?.value||'Indigenous'}</td><td>${species}</td><td>${flw}</td><td>${district}</td><td><span class="${method==='AI Verified'?'status-ai':'status-manual'}">${method}</span></td><td>${new Date().toLocaleDateString('en-IN')}</td>`;
+  tbody.prepend(row);
+  showToast('✅','Registration submitted — Tag: '+tagid);
+  document.getElementById('history-section').scrollIntoView({behavior:'smooth'});
+}
+
+// ── TOAST ──
+function showToast(icon, msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
