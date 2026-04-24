@@ -412,7 +412,7 @@ if __name__ == "__main__":
         predict_from_path(sys.argv[1])
     else:
         # Web server mode
-        print("\n🐄  Bharat Pashudhan App — AI Breed Identification Server")
+        print("\n🐄  Cattle Breed Classification— AI Breed Identification Server")
         print("=" * 55)
         print(f"   Model status : {'✅ Loaded' if classifier.loaded else '⏳ Loading'}")
         print(f"   Demo mode    : {'Yes (install deps for real AI)' if classifier.demo_mode else 'No — real model active'}")
